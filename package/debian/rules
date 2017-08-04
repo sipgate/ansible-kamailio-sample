@@ -1,0 +1,18 @@
+#!/usr/bin/make -f
+
+# Uncomment this to turn on verbose mode.
+export DH_VERBOSE=1
+
+PACKAGE=$(shell dh_listpackages)
+
+# Debhelper has functions we do not need. We are overwriting these so they do not run.
+override_dh_auto_clean:
+override_dh_auto_build:
+override_dh_fixperms:
+override_dh_usrlocal:
+
+build:
+
+%:
+	echo $@
+	dh $@

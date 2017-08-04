@@ -1,0 +1,10 @@
+Source: kamailioconfig
+Section: yourcompany
+Priority: extra
+Maintainer: Jenkins <jenkins@yourcompany.com>
+Build-Depends: debhelper (>= 7)
+Standards-Version: 3.7.3
+
+Package: kamailioconfig
+Architecture: any
+Description: A Basic kamailio Config sample

@@ -1,0 +1,18 @@
+---
+kamailio5_modules:
+  - kamailio
+  - kamailio-dbg
+  - kamailio-geoip-modules
+  - kamailio-mysql-modules
+  - kamailio-tls-modules
+  - kamailio-xml-modules
+
+kamailio4_modules:
+  - kamailio
+  - kamailio-dbg
+  - kamailio-geoip-modules
+  - kamailio-mysql-modules
+  - kamailio-tls-modules
+  - kamailio-xml-modules
+  - kamailio-websocket-modules
+  - kamailio-http-modules

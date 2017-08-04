@@ -1,0 +1,44 @@
+---
+- name: Ensure local group kamailio is present
+  lineinfile: dest=/etc/group regexp='^kamailio:' line='kamailio:x:301:' state=present
+
+- name: Ensure kamailio is able to use private certs
+  file: path=/etc/ssl/private state=directory mode=0711
+
+- name: Ensure kamailio 5 packages are installed
+  apt: name={{ item }}=5.* update_cache=yes
+  register: kamailio_updated
+  with_items: "{{ kamailio5_modules }}"
+  when: kamailio_5 is defined
+
+- name: Ensure kamailio packages are installed
+  apt: name={{ item }} state=latest update_cache=yes
+  register: kamailio_updated
+  with_items: "{{ kamailio4_modules }}"
+  when: kamailio_5 is undefined
+
+- name: set fact if kamailio was updated
+  set_fact: kamailio_update="true"
+  when: kamailio_updated|changed
+
+# system parameter start
+- name: Turn off path mtu discovery
+  sysctl: name=net.ipv4.ip_no_pmtu_disc value=1 reload=yes
+
+- name: Accept packet coming from local address on external interface
+  sysctl: name=net.ipv4.conf.all.accept_local value=1 reload=yes
+
+- name: Create config dir
+  file: path=/etc/kamailio/ state=directory owner=root group=kamailio mode=2755
+
+- name: Create directory for core dumps
+  file: path=/var/cores/ state=directory owner=root group=root mode=777
+
+- name: Set path for core dumps
+  sysctl: name=kernel.core_pattern value=/var/cores/core_%e_%p_%s_%u_%t reload=yes
+# system parameter end
+
+- name: Disable debian default kamailio init script
+  service: name=kamailio enabled=no state=stopped
+  failed_when: "stop_disabled_services | failed and 'service not found' not in stop_disabled_services.msg and 'no service or tool found for' not in stop_disabled_services.msg and 'Could not find the requested service kamailio' not in stop_disabled_services.msg"
+  register: stop_disabled_services

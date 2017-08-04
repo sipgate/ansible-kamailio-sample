@@ -1,0 +1,38 @@
+
+---
+- name: Install or Update kamailio Config
+  apt:
+    name: kamconfig
+    state: latest
+    update_cache: yes
+
+# init start
+- name: "Install init script"
+  template: src=etc_init.d_kamailio.j2 dest=/etc/init.d/kamailio owner=root group=root mode=0755
+  register: init_changed
+
+- name: "bash syntax check on init-script"
+  command: /bin/bash -n /etc/init.d/kamailio
+  register: init_syntax_check
+# init end
+
+- name: "Install /etc/default/kamailio"
+  template: src=etc_default_kamailio.j2 dest=/etc/default/kamailio owner=root group=kamailio mode=0640
+  register: default_changed
+
+- name: "bash syntax check on default-script"
+  command: /bin/bash -n /etc/default/kamailio
+  register: default_syntax_check
+# default end
+
+# kamailio config start
+- name: "Copy kamailio.cfg"
+  template: src=templates/kamailio_config_header.cfg.j2 dest=/etc/kamailio/kamailio.cfg owner=root group=kamailio mode=0440
+
+- name: "kamailio.cfg syntax check"
+  command: /usr/sbin/kamailio -c -f /etc/kamailio/kamailio.cfg
+
+- name: "(Re)start kamailio"
+  service: name=kamailio state=restarted enabled=yes
+  register: kamailio_restarted
+

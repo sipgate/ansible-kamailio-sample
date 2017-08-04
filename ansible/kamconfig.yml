@@ -1,0 +1,7 @@
+
+- hosts: kamailio
+  serial: 1
+
+  roles:
+    - install_kamailio
+    - kamconfig

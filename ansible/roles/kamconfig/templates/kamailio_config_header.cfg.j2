@@ -1,0 +1,96 @@
+# Loadbalancer Config for Neon
+#
+#
+
+####### Global Parameters #########
+
+#!DEFINE NO_CARRIERMANAGEMENT
+#!DEFINE NO_LIMITS
+
+debug={{ LBDEBUGLEVEL }}
+log_stderror=no
+memdbg=5
+memlog=5
+log_facility=LOG_LOCAL6
+fork=yes
+children=4
+disable_tcp=no
+server_signature=no
+#auto_aliases=no
+alias="{{ ALIAS }}"
+listen=udp:{{ EXTERNALIP }}:5060
+####### Modules Section ########
+mpath="/usr/lib/x86_64-linux-gnu/kamailio/modules/"
+
+loadmodule "tm.so"
+loadmodule "sl.so"
+loadmodule "db_mysql.so"
+loadmodule "rr.so"
+loadmodule "pv.so"
+loadmodule "maxfwd.so"
+loadmodule "avpops.so"
+loadmodule "textops.so"
+loadmodule "siputils.so"
+loadmodule "xlog.so"
+loadmodule "sanity.so"
+loadmodule "mi_fifo.so"
+loadmodule "permissions.so"
+loadmodule "kex.so"
+loadmodule "mi_rpc.so"
+loadmodule "htable.so"
+loadmodule "pike.so"
+loadmodule "sdpops.so"
+loadmodule "textopsx.so"
+# We need TM for some modules
+loadmodule "dispatcher.so"
+loadmodule "ctl.so"
+# xmlrpc: monitoring
+loadmodule "xmlrpc.so"
+loadmodule "pipelimit.so"
+loadmodule "rtpengine.so"
+
+# ----------------- setting module-specific parameters ---------------
+
+
+# ----- mi_fifo params -----
+modparam("mi_fifo", "fifo_name", "/tmp/kamailio_fifo")
+
+# ----- rr params -----
+# add value to ;lr param to cope with most of the UAs
+modparam("rr", "enable_full_lr", 1)
+# do not append from tag to the RR (no need for this script)
+modparam("rr", "append_fromtag", 0)
+
+# ----- dispatcher params -----
+modparam("dispatcher", "db_url","mysql://kamailio:{{ DBPASSWORD }}@127.0.0.1/db")
+modparam("dispatcher", "table_name", "dispatcher")
+modparam("dispatcher", "flags", 2)
+modparam("dispatcher", "dst_avp", "$avp(AVP_DST)")
+modparam("dispatcher", "ds_ping_method", "OPTIONS")
+modparam("dispatcher", "ds_ping_from", "sip:siptest@{{ EXTERNALIP }}")
+modparam("dispatcher", "ds_ping_interval", 10)
+modparam("dispatcher", "ds_probing_threshold", 2)
+modparam("dispatcher", "ds_ping_reply_codes", "class=2;code=403;code=404;code=488;class=3;code=501")
+modparam("dispatcher", "ds_probing_mode", 1)
+
+# ----- xmlrpc params ------
+modparam("xmlrpc", "route", "XMLRPC")
+
+# ----- maxfwd params ------
+modparam("maxfwd", "max_limit", 70)
+
+# ----- permissions params ------
+modparam("permissions", "db_url", "mysql://kamailio:{{ DBPASSWORD }}@127.0.0.1/db")
+
+modparam("rtpengine", "rtpengine_disable_tout", 5)
+modparam("rtpengine", "rtpengine_sock", "{{ RTPPROXIES }}")
+
+# Unix sockets for control modules to coexist
+modparam("ctl", "binrpc", "unix:/tmp/kamailio_ctl-{{ EXTERNALIP }}")
+modparam("mi_fifo", "fifo_name", "/tmp/kamailio_fifo-{{ EXTERNALIP }}")
+
+#global pv variables
+modparam("pv", "varset", "externalip=s:{{ EXTERNALIP }}")
+
+# Include the route section
+include_file "/etc/kamailio/neon_kamconfig.cfg"
